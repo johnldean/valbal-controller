@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import scipy.signal as sg 
 import control as ct 
-import functions 
+import functions as fn
 
 vmax = 1
 kl = 5
@@ -21,12 +21,12 @@ Hz = ct.matlab.c2d(Hs,1,method='zoh')
 print(Hz)
 
 p = [-0.5,.1]		#pole locations
-z = [-0.5,.99]		#zero loations
+z = [-0.5,1]		#zero loations
 gain = 0.00001		#gain 
 freq = 0.001     	#at frequency 
 Fs = 1		#sample rate
-#zplane(p,z)
-#plt.show()
+fn.zplane(p,z)
+plt.show()
 k = gain/np.abs( (1 - z[0]*np.exp(-freq/Fs*1j))*(1 - z[1]*np.exp(-freq/Fs*1j))/( (1 - p[0]*np.exp(-freq/Fs*1j))*(1 - p[1]*np.exp(-freq/Fs*1j))))
 
 b = [k, -k*(z[0]+z[1]), k*z[0]*z[1]]
@@ -44,12 +44,13 @@ Kz = ct.tf(b,a,1/Fs)
 #plt.axvline(color='grey')
 #ax.add_patch(circ)
 #plt.show()
-#ct.bode_plot(Kz*Hz)
-#plt.show()
+ct.bode_plot(Kz*Hz)
+plt.show()
+
+'''
 sys = ct.feedback(Kz*Hz,1)
 t1,y1 = ct.step_response(Hz,np.arange(0,10,1))
 t2,y2 = ct.step_response(Hs,np.arange(0,10,0.001))
-
 
 y3 = []
 yy1 = 0
@@ -65,4 +66,4 @@ plt.plot(t1,y1)
 plt.plot(t2,y2)
 plt.plot(np.arange(0,10,0.05),y3)
 plt.show()
-
+'''
