@@ -20,9 +20,9 @@ print(Hs)
 Hz = ct.matlab.c2d(Hs,1,method='zoh')
 print(Hz)
 
-p = [-0.5,.1]		#pole locations
-z = [-0.5,1]		#zero loations
-gain = 0.00001		#gain 
+p = [-0.5,.5]		#pole locations
+z = [-0.5,.9999]	#zero loations
+gain = 0.0000001		#gain 
 freq = 0.001     	#at frequency 
 Fs = 1		#sample rate
 fn.zplane(p,z)

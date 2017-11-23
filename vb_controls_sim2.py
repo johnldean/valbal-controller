@@ -9,122 +9,141 @@ import pandas as pd
 Simulates a controller
 """
 
-#df = pd.read_hdf('../ssi54.h5')
-
-#data_h_ = df.altitude_barometer.values
-#data_h_ = data_h_[500000:]
-a = [1, 0.4, -0.05]
-b = [0.0008955778634698831, -0.00043883315310024273, -0.00044331104241759211]
-y = np.zeros(3)
-x = np.zeros(3)
-
-l = 0
-v = 0
-h = 14000
-hT = 13500
-bounds = 0
-dl = 0
-Fs = 20
-kl = 5
-t_ = np.arange(0,10000,1/Fs)
-i = 0
-dlb = 0.001
-dlv = -0.001
-Tminb = 2
-Tminv = 2
-tlastb = 0
-tlastv = 0
+### Linear Controller Stuff ###
+## Compensator
+p = [-0.5,.5]		#pole locations
+z = [-0.5,.999]		#zero loations
+gain = 1.5e-7		#gain 
+freq = 0.001     	#at frequency 
+Fs0 = 1	 	    	#sample rate
+k = gain/np.abs( (1 - z[0]*np.exp(-freq/Fs0 *1j))*(1 - z[1]*np.exp(-freq/Fs0*1j))/( (1 - p[0]*np.exp(-freq/Fs0*1j))*(1 - p[1]*np.exp(-freq/Fs0*1j))))
+b = [k, -k*(z[0]+z[1]), k*z[0]*z[1]]
+a = [1, -(p[0]+p[1]), p[0]*p[1]]
+## valbal phsical constants
+dlb = 0.001 		#dl/dt while balasting in kg/s
+dlv = -0.001		#dl/dt while venting in kg/s
+Tminb = 2			#minimum time to balast in s
+Tminv = 2			#minimum time to balast in s
+## Loop Variables
+y = np.zeros(3)		#biquad filter output history
+x = np.zeros(3)		#biquad filter input history
+tlastb = 0			#time since last balast event
+tlastv = 0			#time since last balast event
 
 
-#old controller
+### 'Gobal' variables ###
+## State
+l = 0				#lift 
+v = 0				#velocity
+h = 14000			#altitude
+dl = 0				#dl/dt rate
+## Presets
+hT = 13500			#target altitude			
+Fs = 20				#frequency running new data at
+kl = 5				#lift constant (determines velocity)
+klin = 31			#linearized lift contant 
+## other
+i = 0				#loop iterator
+
+
+
+### legacy Controller Stuff ###
 c = [0.6,0.001,0.00066,0.6,0.001,0.00066]
 hlv = h
 hlb = h
-Dl_ = []
-V_ = []
-B_ = []
-h_ = np.ones(1000)*h
-v_ = []
-dl_ = []
-y_ = []
-dh0_ = []
-dlcmd_ = []
+dl_legacy = 0 	#dl/dt from legacy controller
+
+### Variable Arrays ###
+t_ = np.arange(0,20000,1/Fs)
+h_ = np.concatenate((np.ones(1000)*h,np.zeros(t_.size)))
+v_ = np.zeros(t_.size)
+dl_ = np.zeros(t_.size)
+y_ = np.zeros(t_.size)
+dh0_ = np.zeros(t_.size)
+dlcmd_ = np.zeros(t_.size)
 
 
 for t in t_:
 	
-	#linear compensator
+	### Linear compensator ###
 	if t%1 == 0:
 		y = np.roll(y,-1,0)
 		x = np.roll(x,-1,0)
-		x[2]= (hT - h) if np.abs(hT - h) > bounds else 0
+		x[2]= (hT - h) 
 		y[2] = (1/a[0]*(b[0]*x[2] + b[1]*x[2-1]  + b[2]*x[2-2] - a[1]*y[2-1] - a[2]*y[2-2]))
-		dlcmd = y[2]*0.1
+		dlcmd = y[2]*np.abs(x[2]/500)**2
 		dlcmd = dlcmd if np.abs(dlcmd) < 0.001 else np.sign(dlcmd)*0.001
-
+		dlcmd = dlcmd if np.abs(dlcmd) > 0.0001 else 0
 		Twaitb = np.abs(dlb*Tminb / dlcmd) if dlcmd > 0 else np.infty 
 		Twaitv = np.abs(dlv*Tminv / dlcmd) if dlcmd < 0 else np.infty
 
+		## timers for vent/balast actions
 		if t-tlastb >= Twaitb:
 			tlastb = t
 		if t-tlastv >= Twaitv:
 			tlastv = t
-		#print(t-tlastv,t-tlastb, Twaitv,Twaitb)
-
+	
+	## dl/dt setting
 	dl = 0
 	if t-tlastb < Tminb:
 		dl = dlb
 	if t-tlastv < Tminv:
 		dl = dlv
-	#dl = dlcmd
-	# old controller
+	
+	### Legacy controller ###
 	if t%15 == 0:
-		p = np.polyfit(np.concatenate((np.arange(-1000/Fs,0,1/Fs),t_))[i:i+1000],h_[-1000:],1)
+		p = np.polyfit(np.concatenate((np.arange(-1000/Fs,0,1/Fs),t_))[i:i+1000],h_[i:i+1000],1)
 		dh0 = p[0]
 
 		h0 = np.polyval(p,t)
-		V = c[0]*dh0 + c[1]*(h0 - hT) + c[2]*(h0 - hlv)
+		V =  c[0]*dh0 + c[1]*(h0 - hT) + c[2]*(h0 - hlv)
 		B = -c[3]*dh0 - c[4]*(h0 - hT) - c[5]*(h0 - hlb)
-		Dl = 0
+		dl_legacy = 0
 		if V > 1:
 			hlv = h
-			Dl = -0.001
+			dl_legacy = -0.001
 		if B > 1: 
 			hlv = h
-			Dl = 0.001
-		#print(V,B)
-	Dl_.append(Dl)
-	V_.append(V)
-	B_.append(B)
+			dl_legacy = 0.001
+	#dl = dl_legacy			#toggle to turn on legacy controller
 
-	#l += Dl/Fs
-	#l += rd.gauss(0,0.0003)
+	### Simulated Valbal Flight ### 
+	l += rd.gauss(0,0.0002)
 	l += dl/Fs 
 	#v = kl*np.sign(l)*np.sqrt(np.abs(l)) + rd.gauss(0,0.3)
-	v = 30*l
-	#v += rd.gauss(0,0.3)
+	v = klin*l
+	v += rd.gauss(0,0.7)
 	h += v/Fs
+	
+
+	### Store Variables ###
 	#h = data_h_[i]
-	dl_.append(dl)
-	dlcmd_.append(dlcmd)
-	v_.append(v)
-	h_ = np.append(h_,h)
-	y_.append(y)
-	dh0_.append(dh0)
+	dl_[i] = dl
+	dlcmd_[i] =  dlcmd
+	v_[i] = v
+	h_[i+1000] = h
+	y_[i] = y[2]
+	dh0_[i] = dh0
 
 	i += 1
 
 
 h_ = h_[1000:]
 
-plt.subplot(411)
-plt.plot(t_,h_)
+print(np.sum(np.abs(dl_)))
+
+plt.subplot(311)
+plt.plot(t_/60/60,h_)
 plt.ylabel('altitude')
-plt.subplot(412)
-plt.plot(t_,v_)
+plt.subplot(312)
+plt.plot(t_/60/60,v_)
 plt.ylabel('velocity')
-plt.subplot(413)
-plt.plot(t_,dl_)
-plt.plot(t_, dlcmd_)
-plt.ylabel('dl/dt')
+plt.subplot(313)
+plt.plot(t_/60/60,dl_)
+#plt.plot(t_/60/60, dlcmd_)
+#plt.legend(['actual', 'command'])
+#plt.ylabel('dl/dt')
+#plt.xlabel('time (hrs)')
+plt.tight_layout()
 plt.show()
+#plt.savefig('linear_controller_example.png')
