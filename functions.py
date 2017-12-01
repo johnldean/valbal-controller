@@ -80,3 +80,21 @@ def biquad_lowpass_derivative(f0,Q,Fs):
 	#take derivative
 	b = np.subtract(b + [0] ,[0] + b) * Fs
 	return(a,b)
+
+
+# using this to save this code for now
+def generic_biquad():
+	p = [-.5,.5]		#pole locations
+	z = [-.5,.99]	#zero loations
+	gain = 1		#gain 
+	freq = 0.1 + 0.1j     	#at frequency 
+	Fs = 1		#sample rate
+	#fn.zplane(p,z)
+	#plt.show()
+	k = gain/np.abs( (1 - z[0]*np.exp(-freq/Fs*1j))*(1 - z[1]*np.exp(-freq/Fs*1j))/( (1 - p[0]*np.exp(-freq/Fs*1j))*(1 - p[1]*np.exp(-freq/Fs*1j))))
+	k = 1
+
+	b = [k, -k*(z[0]+z[1]), k*z[0]*z[1]]
+	a = [1, -(p[0]+p[1]), p[0]*p[1]]
+	#print(a,b)
+	Kz = ct.tf(b,a,1/Fs)
