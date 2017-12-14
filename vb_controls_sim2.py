@@ -18,16 +18,30 @@ def sim(N_trials,Plot=False):
 	for i in range(N_trials):
 		### Linear Controller Stuff ###
 		## Compensator
+		
 		p = [-0.5,.8]		#pole locations
 		z = [-0.5,.999]		#zero loations
-		gain = 4e-7			#gain 
+		gain = 2e-7			#gain 
 		freq = 0.001    	#at frequency 
 		Fs0 = 1 	    	#sample rate
 		k = gain/np.abs( (1 - z[0]*np.exp(-freq/Fs0 *1j))*(1 - z[1]*np.exp(-freq/Fs0*1j))/( (1 - p[0]*np.exp(-freq/Fs0*1j))*(1 - p[1]*np.exp(-freq/Fs0*1j))))
 		b = [k, -k*(z[0]+z[1]), k*z[0]*z[1]]
 		a = [1, -(p[0]+p[1]), p[0]*p[1]]
-
-		cmd_min = 0.0001
+		print(a,b)
+		'''
+		p = [-.5,.99]		#pole locations
+		z = [-.5,.999]	#zero loations
+		gain = 2e-6		#gain 
+		freq = 0.1    	#at frequency 
+		Fs = 1		#sample rate
+		#fn.zplane(p,z)
+		#plt.show()
+		
+		k = gain/np.abs( (1 - z[0]*np.exp(-freq/Fs*1j))*(1 - z[1]*np.exp(-freq/Fs*1j))/( (1 - p[0]*np.exp(-freq/Fs*1j))*(1 - p[1]*np.exp(-freq/Fs*1j))))
+		b = [k, -k*(z[0]+z[1]), k*z[0]*z[1]]
+		a = [1, -(p[0]+p[1]), p[0]*p[1]]
+		'''
+		cmd_min = 0.00001
 		cmd_max = 0.001
 
 		## valbal phsical constants
@@ -81,16 +95,24 @@ def sim(N_trials,Plot=False):
 			
 			### Linear compensator ###
 			if t%1 == 0:
+
+				if abs(hT - h) > 250:
+					gain_factor = 1+((abs(hT - h)-250)/50)
+				else:
+					gain_factor = 1
+				gain_factor = 1
 				y = np.roll(y,-1,0)
 				x = np.roll(x,-1,0)
-				x[2] =  (hT - h)
+				x[2] =  (hT - np.average(h_[i:i+1000]))
+				#x[2] =  gain + (h_[i+999-Fs] - h_[i+999])
 				y[2] = (1/a[0]*(b[0]*x[2] + b[1]*x[2-1]  + b[2]*x[2-2] - a[1]*y[2-1] - a[2]*y[2-2]))
-				dlcmd = y[2]
+				#print(x[2],y[2],h_)
+				dlcmd = y[2] * gain_factor
 				dlcmd = dlcmd if np.abs(dlcmd) < cmd_max else np.sign(dlcmd)*cmd_max
 				dlcmd = dlcmd if np.abs(dlcmd) > cmd_min else 0
 				Twaitb = np.abs(dlb*Tminb / dlcmd) if dlcmd > 0 else np.infty 
 				Twaitv = np.abs(dlv*Tminv / dlcmd) if dlcmd < 0 else np.infty
-
+				
 				## timers for vent/balast actions
 				if t-tlastb >= Twaitb:
 					tlastb = t

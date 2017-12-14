@@ -35,6 +35,7 @@ def biquad_filter(x,a,b):
 		y[i] = 1/a[0]*(b[0]*x[i] + b[1]*x[i-1]  + b[2]*x[i-2] - a[1]*y[i-1] - a[2]*y[i-2])
 	return y[:-3]
 
+
 def biquad_lowpass(w0,q,Fs):
 	"""
 	Calculates biquad coeffs for a 2nd order lowpass
@@ -83,18 +84,18 @@ def biquad_lowpass_derivative(f0,Q,Fs):
 
 
 # using this to save this code for now
-def generic_biquad():
-	p = [-.5,.5]		#pole locations
-	z = [-.5,.99]	#zero loations
-	gain = 1		#gain 
-	freq = 0.1 + 0.1j     	#at frequency 
-	Fs = 1		#sample rate
+def generic_biquad(p,z,gain,freq,Fs):
+	#p = [-.5,.5]		#pole locations
+	#z = [-.5,.99]	#zero loations
+	#gain = 1		#gain 
+	#freq = 0.1 + 0.1j     	#at frequency 
+	#Fs = 1		#sample rate
 	#fn.zplane(p,z)
 	#plt.show()
 	k = gain/np.abs( (1 - z[0]*np.exp(-freq/Fs*1j))*(1 - z[1]*np.exp(-freq/Fs*1j))/( (1 - p[0]*np.exp(-freq/Fs*1j))*(1 - p[1]*np.exp(-freq/Fs*1j))))
-	k = 1
 
 	b = [k, -k*(z[0]+z[1]), k*z[0]*z[1]]
 	a = [1, -(p[0]+p[1]), p[0]*p[1]]
 	#print(a,b)
-	Kz = ct.tf(b,a,1/Fs)
+	#Kz = ct.tf(b,a,1/Fs)
+	return a, b
