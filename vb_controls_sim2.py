@@ -28,7 +28,10 @@ def sim(N_trials,Plot=False):
 		b = [k, -k*(z[0]+z[1]), k*z[0]*z[1]]
 		a = [1, -(p[0]+p[1]), p[0]*p[1]]
 		print(a,b)
+		sdfg
+
 		'''
+
 		p = [-.5,.99]		#pole locations
 		z = [-.5,.999]	#zero loations
 		gain = 2e-6		#gain 

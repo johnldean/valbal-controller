@@ -27,7 +27,7 @@ def zplane(p,z):
 ##### Biquad stuff #####
 def biquad_filter(x,a,b):
 	"""
-	Filter input x with differnce equation
+	Filter input x with difference equation
 	"""
 	x = np.concatenate((x,np.zeros(3)))
 	y = np.zeros(x.size)
@@ -35,8 +35,19 @@ def biquad_filter(x,a,b):
 		y[i] = 1/a[0]*(b[0]*x[i] + b[1]*x[i-1]  + b[2]*x[i-2] - a[1]*y[i-1] - a[2]*y[i-2])
 	return y[:-3]
 
+def biquad_ext_filter(x,a,b):
+	"""
+	Filter input x with difference equation
+	"""
+	x = np.concatenate((x,np.zeros(4)))
+	dy = np.zeros(x.size)
+	for i in range(0,x.size):
+		dy[i] = 1/a[0]*(b[0]*x[i] + b[1]*x[i-1]  + b[2]*x[i-2] + b[3]*x[i-3] - a[1]*dy[i-1] - a[2]*dy[i-2])
+	return dy[:-4]
 
-def biquad_lowpass(w0,q,Fs):
+
+
+def biquad_lowpass(f0,Q,Fs):
 	"""
 	Calculates biquad coeffs for a 2nd order lowpass
 	"""

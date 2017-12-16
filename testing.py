@@ -4,7 +4,14 @@ import scipy.signal as sg
 import control as ct 
 import functions as fn
 
-a,b = fn.generic_biquad([0,0.8],[0,0.99],1,1,1)
+		
+p = [-0.5,.8]		#pole locations
+z = [-0.5,.999]		#zero loations
+gain = 2e-7			#gain 
+freq = 0.001    	#at frequency 
+Fs0 = 1 	    	#sample rate
+
+a,b = fn.generic_biquad(p,z,gain,freq,Fs0)
 
 print(a,b)
 x = np.ones((1000));
