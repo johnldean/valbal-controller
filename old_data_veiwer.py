@@ -20,7 +20,12 @@ for i in df.index:
 
 '''
 
-x1 = np.load('ssi_45h_avg.npy')
+np.save('ssi_54_avg',df.altitude_barometer.values)
+np.save('ssi_54_v',df.valve_time_total.values)
+np.save('ssi_54_b',df.ballast_time_total)
+
+
+adfsd
 x1 = x1[5*20*60*60:-30*20*60*60]
 t_ = np.arange(0,len(x1))/60/60/20
 a,b = fn.biquad_lowpass_derivative(0.001,.5,20)
