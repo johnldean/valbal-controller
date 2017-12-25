@@ -6,16 +6,19 @@ import functions as fn
 
 
 def position():
-	vmax = 1
+	vmax = 6
 	kl = 5
 	lmax = (vmax/kl)**2
 	lrange = np.arange(-lmax, lmax, 0.0001)[np.newaxis].T
 	vrange = (np.sign(lrange)*kl*(np.abs(lrange))**0.5)
 	k1 = np.linalg.pinv(lrange)@vrange
-	#plt.plot(lrange,vrange)
-	#plt.plot(lrange,k*lrange)
-	#plt.show()
-	#plt.clf()
+	plt.plot(lrange,vrange)
+	plt.plot(lrange,k1*lrange)
+	print(k1)
+	plt.show()
+	plt.clf()
+	
+	dsadsf
 
 	Hs = ct.tf([0,0,k1],[1,0,0])
 	#print(Hs)
@@ -77,4 +80,4 @@ def speed():
 	ct.bode(Kz*Hz,np.logspace(-5,0))
 	plt.show()
 
-speed()
+position()

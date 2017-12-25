@@ -9,7 +9,8 @@ import multiprocessing as mlt
 Simulates a controller
 """
 
-
+turb = np.load('ls-estimation/turb1.npy')
+dlift = np.load('ls-estimation/lift1.npy')
 
 def sim(N_trials,Plot=False):
 	cost_ = [];
@@ -21,15 +22,12 @@ def sim(N_trials,Plot=False):
 		
 		p = [-0.5,.8]		#pole locations
 		z = [-0.5,.999]		#zero loations
-		gain = 2e-7			#gain 
+		gain = 1e-7			#gain 
 		freq = 0.001    	#at frequency 
 		Fs0 = 1 	    	#sample rate
 		k = gain/np.abs( (1 - z[0]*np.exp(-freq/Fs0 *1j))*(1 - z[1]*np.exp(-freq/Fs0*1j))/( (1 - p[0]*np.exp(-freq/Fs0*1j))*(1 - p[1]*np.exp(-freq/Fs0*1j))))
 		b = [k, -k*(z[0]+z[1]), k*z[0]*z[1]]
 		a = [1, -(p[0]+p[1]), p[0]*p[1]]
-		print(a,b)
-		sdfg
-
 		'''
 
 		p = [-.5,.99]		#pole locations
@@ -44,14 +42,14 @@ def sim(N_trials,Plot=False):
 		b = [k, -k*(z[0]+z[1]), k*z[0]*z[1]]
 		a = [1, -(p[0]+p[1]), p[0]*p[1]]
 		'''
-		cmd_min = 0.00001
+		cmd_min = 0.00005
 		cmd_max = 0.001
 
 		## valbal phsical constants
 		dlb = 0.001 		#dl/dt while balasting in kg/s
 		dlv = -0.001		#dl/dt while venting in kg/s
-		Tminb = 2		#minimum time to balast in s
-		Tminv = 2			#minimum time to balast in s
+		Tminb = 5		#minimum time to balast in s
+		Tminv = 5			#minimum time to balast in s
 		## Loop Variables
 		y = np.zeros(3)		#biquad filter output history
 		x = np.zeros(3)		#biquad filter input history
@@ -64,7 +62,7 @@ def sim(N_trials,Plot=False):
 		hT = 13500			#target altitude			
 		Fs = 20				#frequency running new data at
 		kl = 5				#lift constant (determines velocity)
-		klin = 31			#linearized lift contant 
+		klin = 5     		#linearized lift contant 
 		kfb = 0.05/1000
 		LIN_V = True
 		## State
@@ -83,7 +81,7 @@ def sim(N_trials,Plot=False):
 		dl_legacy = 0 	#dl/dt from legacy controller
 
 		### Variable Arrays ###
-		t_ = np.arange(0,20000,1/Fs)
+		t_ = np.arange(0,40000,1/Fs)
 		h_ = np.concatenate((np.ones(1000)*h,np.zeros(t_.size)))
 		v_ = np.zeros(t_.size)
 		dl_ = np.zeros(t_.size)
@@ -131,7 +129,7 @@ def sim(N_trials,Plot=False):
 				dl = dlv
 			
 			### Legacy controller ###
-			if t%15 == 0:
+			if t%10 == 0:
 				p = np.polyfit(np.concatenate((np.arange(-1000/Fs,0,1/Fs),t_))[i:i+1000],h_[i:i+1000],1)
 				dh0 = p[0]
 
@@ -141,18 +139,18 @@ def sim(N_trials,Plot=False):
 				dl_legacy = 0
 				if V > 1:
 					hlv = h
-					dl_legacy = -0.001
+					dl_legacy = -0.0005
 				if B > 1: 
 					hlv = h
-					dl_legacy = 0.001
+					dl_legacy = 0.0005
 			#dl = dl_legacy			#toggle to turn on legacy controller
 
 			### Simulated Valbal Flight ### 
-			l += rd.gauss(0,0.0002)
+			#l += get_lift(t)/Fs
 			l += dl/Fs 
 			ladj = l + (h*kfb)
-			v = klin*(ladj) if LIN_V else kl*np.sign(ladj)*np.sqrt(np.abs(ladj)) + rd.gauss(0,0.3)
-			v += rd.gauss(0,0.7)
+			v = klin*(ladj) if LIN_V else kl*np.sign(ladj)*np.sqrt(np.abs(ladj))
+			v += get_turb(t)/Fs
 			h += v/Fs
 			
 
@@ -196,6 +194,16 @@ def sim(N_trials,Plot=False):
 def sim_wrapper(jank):
 	N_trials = 1
 	return sim(N_trials)
+
+def get_lift(t):
+	global dlift
+	#rd.gauss(0,0.0002)
+	return dlift[int(t/60)]/60
+
+def get_turb(t):
+	global turb
+	#rd.gauss(0,0.8)
+	return turb[int(t/60)]
 
 
 
