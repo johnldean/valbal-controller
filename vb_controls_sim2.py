@@ -149,7 +149,7 @@ def sim(N_trials,Plot=False):
 			#l += get_lift(t)/Fs
 			l += dl/Fs 
 			ladj = l + (h*kfb)
-			v = klin*(ladj) if LIN_V else kl*np.sign(ladj)*np.sqrt(np.abs(ladj))
+			v = klin*(ladj) if LIN_V else 21
 			v += get_turb(t)/Fs
 			h += v/Fs
 			

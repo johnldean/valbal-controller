@@ -6,24 +6,50 @@ import functions as fn
 
 
 def position():
-	vmax = 6
-	kl = 5
+	vmax = 2
+	kl = 3.1
 	lmax = (vmax/kl)**2
 	lrange = np.arange(-lmax, lmax, 0.0001)[np.newaxis].T
 	vrange = (np.sign(lrange)*kl*(np.abs(lrange))**0.5)
 	k1 = np.linalg.pinv(lrange)@vrange
 	plt.plot(lrange,vrange)
 	plt.plot(lrange,k1*lrange)
-	print(k1)
-	plt.show()
-	plt.clf()
-	
-	dsadsf
+	#print(k1)
+	#plt.show()
+	#plt.clf()
 
 	Hs = ct.tf([0,0,k1],[1,0,0])
 	#print(Hs)
 	Hz = ct.matlab.c2d(Hs,1,method='zoh')
-	print(Hz)
+	#print(Hz)
+
+	p = [-0.5,.8]		#pole locations
+	z = [-0.5,.999]		#zero loations
+	gain = 2e-7			#gain 
+	freq = 0.001    	#at frequency 
+	Fs0 = 1 	    	#sample rate
+	a,b = fn.generic_biquad(p,z,gain,freq,Fs0)
+	print('compensator',a,b)
+	Kz = ct.tf(b,a,1)
+
+	a,b = fn.biquad_lowpass(0.01,0.5,20)
+	print('lowpass', a,b)
+
+	a,b = fn.biquad_lowpass(0.005,0.707,1)
+	Fz = ct.tf(b,a,1)
+
+	ct.bode_plot(Hz*Kz*Fz,np.logspace(-4,-1,1000))
+	ct.bode_plot(Hz*Kz,np.logspace(-4,-1,1000))
+	plt.show()
+	plt.clf()
+	sys = ct.feedback(Hz*Kz*Fz,1)
+	y, t = ct.step(sys,np.arange(0,10000,1))
+	plt.plot(t,y.T)
+	sys = ct.feedback(Hz*Kz,1)
+	y, t = ct.step(sys,np.arange(0,10000,1))
+	plt.plot(t,y.T)
+	plt.show()
+
 
 	'''
 	## Design for theoretical optimum effort minimization

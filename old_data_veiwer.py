@@ -5,7 +5,7 @@ import control as ct
 import pandas as pd 
 import functions as fn
 
-df = pd.read_hdf('../ssi54.h5')
+#df = pd.read_hdf('../ssi54.h5')
 '''
 h_ = np.zeros(len(df))
 j = 0
@@ -19,18 +19,17 @@ for i in df.index:
 
 
 '''
-
+'''
 np.save('ssi_54_avg',df.altitude_barometer.values)
 np.save('ssi_54_v',df.valve_time_total.values)
 np.save('ssi_54_b',df.ballast_time_total)
-
-
-adfsd
+'''
+x1 = np.load('ssi_54_avg.npy')
 x1 = x1[5*20*60*60:-30*20*60*60]
 t_ = np.arange(0,len(x1))/60/60/20
 a,b = fn.biquad_lowpass_derivative(0.001,.5,20)
 print(a,b)
-dd
+
 
 dy = fn.biquad_ext_filter(x1,a,b)
 fig, ax2 = plt.subplots()
