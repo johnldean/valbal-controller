@@ -38,10 +38,8 @@ vg_ = np.diff(hf_)*20
 
 vf_ = v_[:-1] + e_
 
-df.spag_effort.plot()
-plt.show()
 
-'''
+
 fig, ax1 = plt.subplots()
 ax1.axvline(t_[np.nonzero(b_)[0][0]], c='b',alpha=0.2,label='balast')
 for i in np.nonzero(b_)[0][1:]:
@@ -58,13 +56,12 @@ ax2.plot(t_[20*60*60:-1],vf_[20*60*60:],'orange',label='fused')
 ax2.plot(t_[:-1],vg_,'red',label='noncausal')
 ax2.plot(t_[20*60*60:],v_[20*60*60:],'purple',label='causal nonfused')
 ax2.plot(t_,df.ascent_rate.values,'pink',label='regression')
-ax2.axhline(0.4, c='orange',alpha=0.5)
+#ax2.axhline(0.4, c='orange',alpha=0.5)
 ax2.legend()
 fig.tight_layout()
-
-
+plt.grid()
 plt.show()
-'''
+
 
 '''
 plt.plot(df.altitude_barometer)

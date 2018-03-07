@@ -6,25 +6,25 @@ import pandas as pd
 from matplotlib.colors import LogNorm
 
 
-h = np.load('ssi_54_avg.npy')
-v = np.load('ssi_54_v.npy')
-b = np.load('ssi_54_b.npy')
-klin = 30
+df = pd.read_hdf('../ssi63-analysis/ssi63.h5',start=20*60*60*20, stop=20*60*60*40)
+
+h = df.altitude_barometer.values
+v = df.valve_time_total.values
+b = df.ballast_time_total.values
+
+klin = 10
 sample_time = 1 #sample time in minutes
-
-
-st = 20*60*60*24
-en = int(20*60*60*24*7/4)
 intv = 20*60*sample_time
 t = intv/20
 navg = 20
-rho = 1e-8
+rho = 1e-7
 
-h = h[st:en:intv]
+h = h[::intv]
 
-vent = np.diff(v[st-1:en:intv])/1000*0.001
-bal = np.diff(b[st-1:en:intv])/1000*0.0006
-
+vent = np.diff(v[::intv])/1000*0.001
+bal = np.diff(b[::intv])/1000*0.0006
+vent = np.append([0],vent)
+bal = np.append([0],bal)
 vent = np.convolve(vent,np.ones(navg)/navg,mode='full')[:-(navg-1)] 
 bal = np.convolve(bal,np.ones(navg)/navg,mode='full')[:-(navg-1)]
 

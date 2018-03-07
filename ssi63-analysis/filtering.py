@@ -1,18 +1,28 @@
 import numpy as np 
 import matplotlib.pyplot as plt 
 import pandas as pd
+import scipy.signal as sg
 
-df = pd.read_hdf('ssi63.h5',start=20*60*60*70, stop=20*60*60*120)
+df = pd.read_hdf('ssi63.h5',start=20*60*60*10, stop=20*60*60*60)
+
 
 h = df.altitude_barometer.values
-h  = h - np.arange(0,h.size)/h.size*(h[-1]-h[0])
-H = np.fft.rfft(h)
+from scipy.ndimage import gaussian_filter1d
+a = gaussian_filter1d(np.diff(np.diff(sg.decimate(h,10))),500)
+val = np.diff(df.valve_time_total.values[::20])
+print([k for k in df.keys()])
+plt.plot(val)
+plt.show()
+exit()
 
-H[:100] = 0
 
-plt.subplot(211)
-plt.plot(h)
-plt.subplot(212)
-plt.plot(np.fft.ifft(H))
-
+#plt.subplot(311)
+plt.plot(df.altitude_barometer.values[::20])
+plt.plot(df.altitude_gps.values[::20])
+for i in np.where(val):
+	plt.vlines(i,df.altitude_gps.min(),df.altitude_gps.max())
+#plt.subplot(312)
+#plt.plot(a)
+#plt.subplot(313)
+#plt.plot(val)
 plt.show()
