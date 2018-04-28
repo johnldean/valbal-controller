@@ -4,7 +4,7 @@ import scipy.signal as sg
 import control as ct 
 import functions as fn
 
-
+#posistion based controller. Used in spag1 and spag2.
 def position():
 	vmax = 2
 	kl = 3.1
@@ -77,21 +77,28 @@ def position():
 
 def speed(): 
 	vmax = 1
-	kl = 5
+	kl = 3.1
 	lmax = (vmax/kl)**2
 	lrange = np.arange(-lmax, lmax, 0.0001)[np.newaxis].T
 	vrange = (np.sign(lrange)*kl*(np.abs(lrange))**0.5)
 	k1 = np.linalg.pinv(lrange)@vrange
+	print(k1)
 	#plt.plot(lrange,vrange)
-	#plt.plot(lrange,k*lrange)
+	#plt.plot(lrange,k1*lrange)
 	#plt.show()
+
 	#plt.clf()
 
-	Hs = ct.tf([0,kl],[1,0])
+	Hs = ct.tf([kl],[1])
 	Hz = ct.matlab.c2d(Hs,1,method='zoh')
 
-	p = [-.5,.99]		#pole locations
-	z = [-.5,.999]	#zero loations
+	Fs = 1
+	Tp = 100
+	Tz = 1000
+	p1 = np.exp(-1/Tp/Fs)
+	z1 = np.exp(-1/Tz/Fs)
+	p = [-.5,p1]		#pole locations
+	z = [-.5,z1]	#zero loations
 	gain = 0.002		#gain 
 	freq = 0.1    	#at frequency 
 	Fs = 1		#sample rate
@@ -106,4 +113,4 @@ def speed():
 	ct.bode(Kz*Hz,np.logspace(-5,0))
 	plt.show()
 
-position()
+speed()

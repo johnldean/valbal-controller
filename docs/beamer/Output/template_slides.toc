@@ -1,0 +1,4 @@
+\beamer@endinputifotherversion {3.36pt}
+\beamer@sectionintoc {1}{System}{2}{0}{1}
+\beamer@sectionintoc {2}{Spaghetti}{4}{0}{2}
+\beamer@sectionintoc {3}{Lasagna}{9}{0}{3}

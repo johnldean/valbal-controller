@@ -146,7 +146,7 @@ def sim(N_trials,Plot=False):
 			#dl = dl_legacy			#toggle to turn on legacy controller
 
 			### Simulated Valbal Flight ### 
-			#l += get_lift(t)/Fs
+			l += get_lift(t)/Fs
 			l += dl/Fs 
 			ladj = l + (h*kfb)
 			v = klin*(ladj) if LIN_V else 21
@@ -197,13 +197,13 @@ def sim_wrapper(jank):
 
 def get_lift(t):
 	global dlift
-	#rd.gauss(0,0.0002)
-	return dlift[int(t/60)]/60
+	return rd.gauss(0,0.0002)
+	#return dlift[int(t/60)]/60
 
 def get_turb(t):
 	global turb
-	#rd.gauss(0,0.8)
-	return turb[int(t/60)]
+	return rd.gauss(0,0.8)
+	#return turb[int(t/60)]
 
 
 
